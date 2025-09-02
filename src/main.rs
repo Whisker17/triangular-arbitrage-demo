@@ -8,6 +8,10 @@ mod arbitrage;
 mod logging;
 mod display;
 mod pools;
+mod graph;
+mod multi_path;
+mod batch_fetcher;
+mod multi_path_main;
 
 use std::error::Error;
 use alloy::providers::ProviderBuilder;
@@ -15,6 +19,7 @@ use alloy::providers::ProviderBuilder;
 use tokio::runtime::Runtime;
 use tokio::time::{sleep, Duration, Instant};
 use chrono::Utc;
+use std::env;
 
 use config::Config;
 use cache::ReservesCache;
@@ -26,6 +31,7 @@ use logging::{
 };
 use display::{print_startup_banner, format_pool_reserves, format_block_info};
 use pools::moe::MoeProtocol;
+use multi_path_main::run_multi_path_arbitrage;
 
 /// Main application entry point
 fn main() -> Result<(), Box<dyn Error>> {
@@ -40,8 +46,22 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let rt = Runtime::new()?;
 
+    // Check for mode selection via environment variable or command line argument
+    let mode = env::var("ARBITRAGE_MODE")
+        .or_else(|_| env::args().nth(1).ok_or_else(|| ""))
+        .unwrap_or_else(|_| "triangular".to_string());
+
     rt.block_on(async {
-        run_arbitrage_monitor(config).await
+        match mode.to_lowercase().as_str() {
+            "multi" | "multipath" | "multi-path" => {
+                println!("🚀 Starting Multi-Path Arbitrage Mode");
+                run_multi_path_arbitrage(config).await
+            }
+            "triangular" | "triangle" | "legacy" | _ => {
+                println!("🚀 Starting Triangular Arbitrage Mode (Legacy)");
+                run_arbitrage_monitor(config).await
+            }
+        }
     })
 }
 

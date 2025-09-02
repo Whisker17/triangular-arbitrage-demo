@@ -8,8 +8,13 @@ pub const WMNT_ADDRESS: &str = "0x78c1b0c915c4faa5fffa6cabf0219da63d7f4cb8";
 pub const MOE_ADDRESS: &str = "0x4515a45337f461a11ff0fe8abf3c606ae5dc00c9";
 pub const JOE_ADDRESS: &str = "0x371c7ec6d8039ff7933a2aa28eb827ffe1f52f07";
 
+/// Gas cost constants (based on design requirements)
+pub const GAS_UNITS_3_HOPS: u64 = 700_000_000;  // 3-hops: 700M gas
+pub const GAS_UNITS_4_HOPS: u64 = 720_000_000;  // 4-hops: 720M gas
+pub const DEFAULT_GAS_PRICE_GWEI: f64 = 0.02; // 0.02 gwei as specified in design
+pub const GWEI_TO_MNT_MULTIPLIER: f64 = 1e-9; // Conversion factor from gwei to MNT
+
 /// Default configuration constants
-pub const DEFAULT_TRANSACTION_COST_MNT: f64 = 0.02;
 pub const DEFAULT_BLOCK_TIME_SECONDS: u64 = 2;
 pub const DEFAULT_MAX_RETRIES: u32 = 3;
 pub const DEFAULT_CSV_FILE_PATH: &str = "arbitrage_opportunities.csv";

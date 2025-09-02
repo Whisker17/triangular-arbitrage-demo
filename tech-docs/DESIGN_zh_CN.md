@@ -27,10 +27,10 @@
         - https://deepwiki.com/cakevm/swap-path/1-overview
         - https://deepwiki.com/cakevm/swap-path/2-architecture-and-dependencies
         - https://deepwiki.com/cakevm/swap-path/3-core-components
-        - https://deepwiki.com/cakevm/swap-path/3.1-market-management
-        - https://deepwiki.com/cakevm/swap-path/3.2-graph-based-pathfinding
-        - https://deepwiki.com/cakevm/swap-path/3.3-pool-abstractions
-        - https://deepwiki.com/cakevm/swap-path/3.4-swappath-data-structures
+            - https://deepwiki.com/cakevm/swap-path/3.1-market-management
+            - https://deepwiki.com/cakevm/swap-path/3.2-graph-based-pathfinding
+            - https://deepwiki.com/cakevm/swap-path/3.3-pool-abstractions
+            - https://deepwiki.com/cakevm/swap-path/3.4-swappath-data-structures
 
     4.2 我希望你可以构建一个高性能的系统，因为在套利中时效性很重要，因此几个优化点可能是：
         1. 对于 reserves 的情况，直接 batch request 请求所有交易对的最新状态

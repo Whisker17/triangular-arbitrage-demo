@@ -2,7 +2,7 @@ use alloy::primitives::U256;
 use crate::types::{Token, PoolReserves, ArbitrageOpportunity};
 use crate::config::Config;
 use crate::math::{u256_to_f64, find_best_input, get_amount_out};
-use crate::constants::DEFAULT_TRANSACTION_COST_MNT;
+use crate::constants::{GAS_UNITS_3_HOPS, DEFAULT_GAS_PRICE_GWEI, GWEI_TO_MNT_MULTIPLIER};
 
 /// Extract and normalize pool reserves for ternary search algorithm
 fn prepare_pools_for_search(
@@ -52,8 +52,9 @@ pub fn find_optimal_arbitrage(
     // Calculate final output amount
     let final_output = best_input + gross_profit;
     
-    // Calculate net profit after transaction costs
-    let net_profit = gross_profit - config.transaction_cost_mnt;
+    // Calculate net profit after precise gas costs (3-hops for triangular arbitrage)
+    let gas_cost = config.calculate_gas_cost(GAS_UNITS_3_HOPS);
+    let net_profit = gross_profit - gas_cost;
     
     // Calculate profit percentage
     let profit_percentage = if best_input > 0.0 { 
@@ -62,14 +63,15 @@ pub fn find_optimal_arbitrage(
         0.0 
     };
     
-    Some(ArbitrageOpportunity {
-        optimal_input: best_input,
-        final_output,
-        gross_profit,
-        net_profit,
-        profit_percentage,
-        search_method: "ternary_search".to_string(),
-    })
+            Some(ArbitrageOpportunity {
+            optimal_input: best_input,
+            final_output,
+            gross_profit,
+            net_profit,
+            profit_percentage,
+            search_method: "ternary_search".to_string(),
+            path: None, // Legacy triangular arbitrage doesn't use path structure
+        })
 }
 
 /// Legacy arbitrage function (kept for potential comparison/debugging)
@@ -105,8 +107,9 @@ pub fn check_arbitrage_legacy(
     };
     let wmnt_out = get_amount_out(joe_out, joe_reserve, wmnt_reserve);
 
-    // Calculate transaction cost in wei (0.02 MNT = 0.02 * 10^18 wei)
-    let tx_cost = U256::from((DEFAULT_TRANSACTION_COST_MNT * 1e18) as u128);
+    // Calculate precise gas cost in wei (3-hops for legacy triangular arbitrage)
+    let gas_cost_mnt = GAS_UNITS_3_HOPS as f64 * DEFAULT_GAS_PRICE_GWEI * GWEI_TO_MNT_MULTIPLIER;
+    let tx_cost = U256::from((gas_cost_mnt * 1e18) as u128);
     
     // Calculate net profit after transaction costs
     let net_profit = if wmnt_out > start_amount + tx_cost {

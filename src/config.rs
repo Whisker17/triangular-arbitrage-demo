@@ -7,7 +7,7 @@ use crate::constants::*;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub rpc_url: String,
-    pub transaction_cost_mnt: f64,
+    pub gas_price_gwei: f64,
     pub block_time_seconds: u64,
     pub max_retries: u32,
     pub csv_file_path: String,
@@ -25,10 +25,10 @@ impl Config {
             .or_else(|_| env::var("MANTLE_RPC_URL"))
             .map_err(|_| "RPC_URL environment variable is required. Please set RPC_URL=your_rpc_endpoint")?;
 
-        let transaction_cost_mnt = env::var("TRANSACTION_COST_MNT")
+        let gas_price_gwei = env::var("GAS_PRICE_GWEI")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(DEFAULT_TRANSACTION_COST_MNT);
+            .unwrap_or(DEFAULT_GAS_PRICE_GWEI);
 
         let block_time_seconds = env::var("BLOCK_TIME_SECONDS")
             .ok()
@@ -55,7 +55,7 @@ impl Config {
 
         Ok(Config {
             rpc_url,
-            transaction_cost_mnt,
+            gas_price_gwei,
             block_time_seconds,
             max_retries,
             csv_file_path,
@@ -68,10 +68,17 @@ impl Config {
     pub fn print_summary(&self) {
         println!("🔍 Algorithm: Ternary search optimization ({} iterations)", self.ternary_search_iterations);
         println!("🌐 RPC URL: {}", self.rpc_url);
-        println!("⛽ Transaction cost: {} MNT", self.transaction_cost_mnt);
+        println!("⛽ Gas Price: {:.3} gwei", self.gas_price_gwei);
+        println!("💸 Gas Cost (3-hops): {:.6} MNT", self.calculate_gas_cost(GAS_UNITS_3_HOPS));
+        println!("💸 Gas Cost (4-hops): {:.6} MNT", self.calculate_gas_cost(GAS_UNITS_4_HOPS));
         println!("💹 DEX fee: {}%", self.dex_fee * 100.0);
         println!("⏰ Block time: {} seconds", self.block_time_seconds);
         println!("📝 Logging: Only when reserves change (not every block)");
         println!("📋 Reserves info: Included in each update");
+    }
+
+    /// Calculate precise gas cost based on gas units (result in MNT)
+    pub fn calculate_gas_cost(&self, gas_units: u64) -> f64 {
+        gas_units as f64 * self.gas_price_gwei * GWEI_TO_MNT_MULTIPLIER
     }
 }

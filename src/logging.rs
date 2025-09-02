@@ -57,7 +57,7 @@ pub fn write_arbitrage_to_csv(
         gross_profit_wmnt: opportunity.gross_profit,
         net_profit_wmnt: opportunity.net_profit,
         profit_percentage: opportunity.profit_percentage,
-        gas_cost_mnt: config.transaction_cost_mnt,
+        gas_cost_mnt: opportunity.gas_cost(config.gas_price_gwei),
         search_method: opportunity.search_method.clone(),
         moe_wmnt_reserve0: moe_wmnt_reserves.reserve_a.to_string(),
         moe_wmnt_reserve1: moe_wmnt_reserves.reserve_b.to_string(),
@@ -84,7 +84,12 @@ pub fn log_profitable_arbitrage(
     println!("   📈 Final Output: {:.6} WMNT", opportunity.final_output);
     println!("   💰 Gross Profit: {:.6} WMNT", opportunity.gross_profit);
     println!("   🎯 Net Profit: {:.6} WMNT ({:.2}%)", opportunity.net_profit, opportunity.profit_percentage);
-    println!("   ⛽ After {} MNT tx cost", config.transaction_cost_mnt);
+    let gas_cost = if opportunity.hop_count() > 0 {
+        opportunity.gas_cost(config.gas_price_gwei)
+    } else {
+        config.calculate_gas_cost(crate::constants::GAS_UNITS_3_HOPS) // Default to 3-hops for legacy
+    };
+    println!("   ⛽ After {:.6} MNT gas cost", gas_cost);
     println!("   🔍 Search iterations: {}", config.ternary_search_iterations);
     println!("   ⚡ Analysis time: {:?}", fetch_duration);
 }
@@ -226,6 +231,7 @@ mod tests {
             net_profit: 3.0,
             profit_percentage: 3.0,
             search_method: "test".to_string(),
+            path: None,
         };
 
         let result = logger.log_opportunity(&opportunity);
